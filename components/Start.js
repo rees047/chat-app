@@ -1,5 +1,5 @@
 import React from 'react';
-import { ImageBackground, Image, StyleSheet, View, Text, TextInput, TouchableOpacity, Alert } from 'react-native';
+import { ImageBackground, Image, StyleSheet, View, Text, TextInput, TouchableOpacity, Alert, YellowBox } from 'react-native';
 
 const imageBG = require('../assets/BackgroundImage.png');
 const userIcon = require('../assets/icon.svg');
@@ -37,42 +37,43 @@ export default class Start extends React.Component {
                 <View style={style.appCommonWrapper}>
                     <Text style={style.appTitle}>Avian App</Text>
                 </View>
-                <View style={[style.appCommonWrapper, style.whiteBox]}>
-                    <View style={[style.width88, style.yourNameWrapper]}>
-                        <Image source={userIcon} style={style.userIcon} />
-                        <TextInput
-                            style={[style.commonText, style.yourName]}
-                            onChangeText={(text) => this.setState({text})}
-                            value={this.state.text}
-                            placeholder='Your Name' />                   
-                    </View>
-                    <View style={style.width88}>
-                        <Text style={[style.commonText, style.chooseText]}>Choose Background Color</Text>
-                        <View style={style.bgColorOptionsWrapper}>
-                            {
-                                bgColors.map((bgColor) => (
-                                    <TouchableOpacity
-                                        key={bgColor}
-                                        onPress={() => this.setBGColor(bgColor)}
-                                        style={[
-                                            style.bgColorOptions,
-                                            choosenBG === bgColor ? style.border : null,
-                                            { backgroundColor: bgColor }
-                                        ]}
-                                    >
-                                    </TouchableOpacity>
-                                ))
-                            }
+                <View style={style.appCommonWrapper}>
+                    <View style={style.whiteBox}>
+                        <View style={style.yourNameWrapper}>
+                            <Image source={userIcon} style={style.userIcon} />
+                            <TextInput
+                                style={[style.commonText, style.yourName]}
+                                onChangeText={(text) => this.setState({text})}
+                                value={this.state.text}
+                                placeholder='Your Name' />                   
                         </View>
-                        
-                    </View>                    
-                    <View style={[style.width88, style.ButtonWrapper]}>
-                        <TouchableOpacity
-                            style={style.Button}
-                            onPress={() => { this.handleChat(this.state) }}
-                            title="Start Chatting">
-                                <Text style={style.ButtonText}>Start Chatting</Text>
-                        </TouchableOpacity>
+                        <View style={style.chooseBGWrapper}>
+                            <Text style={[style.commonText, style.chooseText]}>Choose Background Color</Text>
+                            <View style={style.bgColorOptionsWrapper}>
+                                {
+                                    bgColors.map((bgColor) => (
+                                        <TouchableOpacity
+                                            key={bgColor}
+                                            onPress={() => this.setBGColor(bgColor)}
+                                            style={[
+                                                style.bgColorOptions,
+                                                choosenBG === bgColor ? style.border : null,
+                                                { backgroundColor: bgColor }
+                                            ]}
+                                        >
+                                        </TouchableOpacity>
+                                    ))
+                                }
+                            </View>
+                        </View>                    
+                        <View style={style.ButtonWrapper}>
+                            <TouchableOpacity
+                                style={style.Button}
+                                onPress={() => { this.handleChat(this.state) }}
+                                title="Start Chatting">
+                                    <Text style={style.ButtonText}>Start Chatting</Text>
+                            </TouchableOpacity>
+                        </View>
                     </View>
                 </View>
             </ImageBackground>  
@@ -87,16 +88,16 @@ const style = StyleSheet.create({
         resizeMode: 'cover',
         justifyContent: 'space-evenly',
         alignItems: 'center',
-        letterSpacing: 2
+        letterSpacing: 2       
     },
     width88 : {
         width: '88%'
     },
     appCommonWrapper : {
-        flex: 1,
+        display: 'flex',
         justifyContent: 'space-evenly',
         alignItems: 'center',
-        width: '88%'        
+        width: '88%',
     },
     appTitle : {
         fontSize: 45,
@@ -104,20 +105,26 @@ const style = StyleSheet.create({
         color: '#ffffff',
     },
     whiteBox : {
+        height: 280,
         backgroundColor: '#ffffff',
-        marginBottom: '5%'
+        width: '100%',
+        padding: 20,
+        marginTop: 20,
+        marginBottom: 5
     },
     yourNameWrapper : {
         borderColor: '#757083',
         borderWidth: 1,
         display: 'flex',
         flexDirection: 'row',
+        justifyContent: 'flex-start',
         alignItems: 'center',
+        height: 40
     },
     userIcon : {
         resizeMode: 'contain',
         height: 25,
-        width : '5%'
+        width : 20
     },
     yourName : {
         opacity: 0.5,
@@ -129,20 +136,27 @@ const style = StyleSheet.create({
         fontWeight: '300',
         color: '#757083',
     },
+    chooseBGWrapper : {
+        display: 'flex',
+        justifyContent: 'space-evenly',
+        paddingTop: 20,
+        paddingBottom: 20,
+        height: 150
+    },
     chooseText:{
-        paddingBottom: 25
+        paddingBottom: 10
     },
     bgColorOptionsWrapper : {
        display: 'flex',
        justifyContent: 'space-evenly',
        alignItems: 'center',
-       flexDirection: 'row'
+       flexDirection: 'row',
+       paddingBottom: 10
     },
     bgColorOptions:{
-        width: 100,
-        height: 100,
-        padding: 10,
-        borderRadius: 100,
+        width: 50,
+        height: 50,
+        borderRadius: 50,
     },
     border:{
         borderWidth: 2,
@@ -150,17 +164,18 @@ const style = StyleSheet.create({
     },
     ButtonWrapper : {
         backgroundColor: '#757083',
-        alignItems: 'center'
+        alignItems: 'center',
     }, 
     Button : {
         width: '88%',
         textAlign: 'center',
         height: 40,
-        paddingTop: 8
+        justifyContent: 'center',
+        alignItems: 'center',
     },
     ButtonText : {
         fontSize: 16,
-        fontWeight: 600,
+        fontWeight: '600',
         color: '#ffffff',
     }
 
