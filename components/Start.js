@@ -3,7 +3,7 @@ import { ImageBackground, Image, StyleSheet, View, Text, TextInput, TouchableOpa
 
 const imageBG = require('../assets/BackgroundImage.png');
 const userIcon = require('../assets/icon.svg');
-const bgColors = ["#090C08", "#474056", "#8A95A5", "#B9C6AE"];
+const bgColors = ["#191919", "#474056", "#8A95A5", "#B9C6AE"];
 
 export default class Start extends React.Component {
 
@@ -68,6 +68,10 @@ export default class Start extends React.Component {
                         </View>                    
                         <View style={style.ButtonWrapper}>
                             <TouchableOpacity
+                                accessible={true}
+                                accessibilityLabel="Background Color Options"
+                                accessibilityHint="Choose the background color your want for your chatroom"
+                                accessibilityRole="button"
                                 style={style.Button}
                                 onPress={() => { this.handleChat(this.state) }}
                                 title="Start Chatting">
