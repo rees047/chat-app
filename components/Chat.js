@@ -30,6 +30,7 @@ export default class Chat extends React.Component {
         }
 
         if (!firebase.apps.length){
+            console.log('connect firebase');
             firebase.initializeApp(firebaseConfig);
         }
 
@@ -66,6 +67,10 @@ export default class Chat extends React.Component {
                         uid: user.uid,
                         messages: []
                     });
+
+                    if(user.uid != null){
+                        console.log('authenticated');
+                    }
                     
                     //create a reference to the active user's documents (messages)
                     //this.referenceChatMessages = firebase.firestore().collection('messages');
