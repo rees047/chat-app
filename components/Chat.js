@@ -1,8 +1,13 @@
 import React from 'react';
 import { Platform, KeyboardAvoidingView, StyleSheet, View } from 'react-native';
 import { GiftedChat, Bubble } from 'react-native-gifted-chat';
+//cloud database storage
 import firebase from "firebase";
-import "firebase/firestore"; 
+import "firebase/firestore";
+//local browser/mobile storage
+import AsyncStorage from '@react-native-community/async-storage';
+//app to idenity user offline or online
+import NetInfo from '@react-native-community/netinfo';
 
 const firebaseConfig = {
     apiKey: "AIzaSyCZdwccg52188RwpfQ33os152z0_Cw0Wwg",
@@ -21,7 +26,8 @@ export default class Chat extends React.Component {
         this.state = {
             messages : [],
             uid: 0,
-            user: ''
+            user: '',
+            isConnected: ''
         }
 
         if (!firebase.apps.length){
@@ -42,6 +48,17 @@ export default class Chat extends React.Component {
         let name = this.props.route.params.name;
         this.props.navigation.setOptions({ title: this.capitalize(name)});
 
+        //check if user is offline or online
+        NetInfo.fetch().then(connection => {
+            if(connection.isConnected){
+                this.setState({isConnected: true});
+                console.log('online');
+            }else{
+                this.setState({isConnected: false});
+                console.log('offline');
+            }
+        });
+
         this.authUnsubscribe = firebase.auth().onAuthStateChanged(async (user) => {
             if (!user) {
              await firebase.auth().signInAnonymously();
@@ -56,7 +73,9 @@ export default class Chat extends React.Component {
            this.referenceChatMessages = firebase.firestore().collection('messages');
            // listen for collection changes for current user
            this.unsubscribe = this.referenceChatMessages.orderBy("createdAt", "desc").onSnapshot(this.onCollectionUpdate);
-        });     
+        });
+
+        this.getMessages();
     }
 
     componentWillUnmount(){
@@ -64,7 +83,38 @@ export default class Chat extends React.Component {
         this.authUnsubscribe();    
         //stop listenting for changes
         this.unsubscribe();
-    }   
+    }
+
+    async getMessages(){
+        let messages = '';
+        try{
+            messages = await AsyncStorage.getItem('messages') || [];
+            this.setState({
+                messages: JSON.parse(messages)
+            });
+        }catch (error){
+            console.log(error.message);
+        }
+    }
+
+    async saveMessages(){
+        try{
+            await AsyncStorage.setItem('messages', JSON.stringify(this.state.messages));
+        }catch(error){
+            console.log(error.message);
+        }
+    }
+
+    async deleteMessages(){
+        try{
+            await AsyncStorage.removeItem('messages');
+            this.setState({
+                messages: []
+            });
+        }catch(error){
+            console.log(error.message);
+        }
+    }
     
     addMessage(msg){
         // add a new messages to the collection
@@ -81,7 +131,9 @@ export default class Chat extends React.Component {
         //append the new message to the chat screen
         this.setState((previousState) => ({
             messages: GiftedChat.append(previousState.messages, messages)
-        }));
+        }), () => { //add a callback to save the messages locally
+            this.saveMessages();
+        });
       
          //the newest messsage written by the user is the first index of array
         this.addMessage(messages[0]);
@@ -104,6 +156,17 @@ export default class Chat extends React.Component {
         this.setState({
             messages
         });
+    }
+
+    renderInputToolbar(props) {
+        if (this.state.isConnected == false) {
+        } else {
+          return(
+            <InputToolbar
+            {...props}
+            />
+          );
+        }
     }
         
     renderBubble(props){
@@ -135,6 +198,7 @@ export default class Chat extends React.Component {
         return (
             <View style={[style.container, {backgroundColor: backgroundColor}]} >
                 <GiftedChat
+                    renderInputToolbar={this.renderToolBar.bind(this)}
                     renderBubble={this.renderBubble.bind(this)}
                     messages={this.state.messages}
                     onSend={(messages) => this.onSend(messages)}
