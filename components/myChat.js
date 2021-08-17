@@ -21,7 +21,8 @@ export default class Chat extends React.Component {
         this.state = {
             messages : [],
             uid: 0,
-            user: ''
+            user: '',
+            displayName: ''
         }
 
         if (!firebase.apps.length){
@@ -42,6 +43,7 @@ export default class Chat extends React.Component {
         let name = this.props.route.params.name;
         this.props.navigation.setOptions({ title: this.capitalize(name)});
 
+        this.referenceChatMessages = firebase.firestore().collection('messages');
         this.authUnsubscribe = firebase.auth().onAuthStateChanged(async (user) => {
             if (!user) {
              await firebase.auth().signInAnonymously();
@@ -52,6 +54,7 @@ export default class Chat extends React.Component {
                 uid: user.uid,
                 messages: []
             });
+
            //create a reference to the active user's documents (messages)
            this.referenceChatMessages = firebase.firestore().collection('messages');
            // listen for collection changes for current user
@@ -66,10 +69,11 @@ export default class Chat extends React.Component {
         this.unsubscribe();
     }   
     
-    addMessage(msg){
+    addMessage(messages){
+        let msg = messages[0]
         // add a new messages to the collection
-        // data from Gifted Chat
         this.referenceChatMessages.add({
+            uid: this.state.uid,
             _id: msg._id,
             text: msg.text,
             createdAt: msg.createdAt,
@@ -82,9 +86,9 @@ export default class Chat extends React.Component {
         this.setState((previousState) => ({
             messages: GiftedChat.append(previousState.messages, messages)
         }));
-      
-         //the newest messsage written by the user is the first index of array
-        this.addMessage(messages[0]);
+
+        //the newest messsage written by the user is the first index of array
+        this.addMessage(this.state.messages);
     }
 
     onCollectionUpdate = (querySnapshot) => {
@@ -100,12 +104,11 @@ export default class Chat extends React.Component {
             user: data.user
           });
         });
-
         this.setState({
             messages
         });
-    }
-        
+    }    
+
     renderBubble(props){
         return (
             <Bubble
@@ -132,6 +135,7 @@ export default class Chat extends React.Component {
     render(){
         let { name, backgroundColor } = this.props.route.params;
         //or let name = this.props.route.params.name;
+        //console.log(this.props.route.params);
         return (
             <View style={[style.container, {backgroundColor: backgroundColor}]} >
                 <GiftedChat
@@ -139,8 +143,10 @@ export default class Chat extends React.Component {
                     messages={this.state.messages}
                     onSend={(messages) => this.onSend(messages)}
                     user={{
-                        _id: this.state.uid,  //Authenticated ID of the signed user.
-                        name: this.capitalize(name) // Name of the user typed in the Start component.
+                        /* Authenticated ID of the signed user. */
+                        _id: this.state.uid,
+                        /* Name of the user typed in the Start component. */
+                        name: this.capitalize(name),
                     }}
                 />
                 { Platform.OS === 'android' ? <KeyboardAvoidingView behavior="height" /> : null }
