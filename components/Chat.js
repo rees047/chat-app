@@ -4,9 +4,7 @@ import { GiftedChat, Bubble, InputToolbar } from 'react-native-gifted-chat';
 //cloud database storage
 import firebase from "firebase";
 import "firebase/firestore";
-//local browser/mobile storage -- works with expo cli but conflicts with actual mobile devices
-//import AsyncStorage from '@react-native-community/async-storage';
-// fix for AsyncStorage to make it compatible with mobile
+//local browser/mobile storage
 import AsyncStorage from '@react-native-async-storage/async-storage'
 //app to idenity user offline or online
 import NetInfo from '@react-native-community/netinfo';
@@ -47,7 +45,7 @@ export default class Chat extends React.Component {
     }
 
     componentDidMount(){
-        let name = this.props.route.params.name;
+        const name = this.props.route.params.name;
         this.props.navigation.setOptions({ title: this.capitalize(name)});
 
         //check if user is offline or online
@@ -60,13 +58,14 @@ export default class Chat extends React.Component {
                 this.authUnsubscribe = firebase.auth().onAuthStateChanged(async (user) => {
                     if (!user) {
                         await firebase.auth().signInAnonymously();
-                        //update user state with currently active user data
-                        this.setState({
-                            uid: user.uid,
-                            messages: []
-                        });
                     }
 
+                    //update user state with currently active user data
+                    this.setState({
+                        uid: user.uid,
+                        messages: []
+                    });
+                    
                     //create a reference to the active user's documents (messages)
                     this.referenceChatMessages = firebase.firestore().collection('messages');
                     // listen for collection changes for current user
@@ -81,12 +80,10 @@ export default class Chat extends React.Component {
     }
 
     componentWillUnmount(){
-        if(this.state.isConnected == true){
-            //stop listening to authentication
-            this.authUnsubscribe();    
-            //stop listenting for changes
-            this.unsubscribe();
-        }
+        //stop listening to authentication
+        this.authUnsubscribe();    
+        //stop listenting for changes
+        this.unsubscribe();
     }
 
     async getMessages(){
