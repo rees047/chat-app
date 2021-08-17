@@ -2,10 +2,10 @@ import React from 'react';
 import { Platform, KeyboardAvoidingView, StyleSheet, View } from 'react-native';
 import { GiftedChat, Bubble, InputToolbar } from 'react-native-gifted-chat';
 //cloud database storage
-import firebase from "firebase";
-import "firebase/firestore";
+import firebase from 'firebase';
+import 'firebase/firestore';
 //local browser/mobile storage
-import AsyncStorage from '@react-native-async-storage/async-storage'
+import AsyncStorage from '@react-native-async-storage/async-storage';
 //app to idenity user offline or online
 import NetInfo from '@react-native-community/netinfo';
 
@@ -16,7 +16,6 @@ const firebaseConfig = {
     storageBucket: "chat-app-661f6.appspot.com",
     messagingSenderId: "1080192921551",
     appId: "1:1080192921551:web:bf672e0f65e98f54e1acba",
-    measurementId: "G-G38MQ2K56V"
 };
 
 export default class Chat extends React.Component {
@@ -34,7 +33,9 @@ export default class Chat extends React.Component {
             firebase.initializeApp(firebaseConfig);
         }
 
-        this.referenceChatMessages = null;
+        //this.referenceChatMessages = null;
+        //create a reference to the active user's documents (messages)
+        this.referenceChatMessages = firebase.firestore().collection('messages');
     }
 
     capitalize(str) {
@@ -57,9 +58,9 @@ export default class Chat extends React.Component {
                 //listen to authentication events
                 this.authUnsubscribe = firebase.auth().onAuthStateChanged(async (user) => {
                     if (!user) {
-                        await firebase.auth().signInAnonymously();
+                        //await firebase.auth().signInAnonymously();
+                        firebase.auth().signInAnonymously();
                     }
-
                     //update user state with currently active user data
                     this.setState({
                         uid: user.uid,
@@ -67,7 +68,7 @@ export default class Chat extends React.Component {
                     });
                     
                     //create a reference to the active user's documents (messages)
-                    this.referenceChatMessages = firebase.firestore().collection('messages');
+                    //this.referenceChatMessages = firebase.firestore().collection('messages');
                     // listen for collection changes for current user
                     this.unsubscribe = this.referenceChatMessages.orderBy("createdAt", "desc").onSnapshot(this.onCollectionUpdate);
                 });
@@ -77,6 +78,7 @@ export default class Chat extends React.Component {
                 this.getMessages();
             }
         });
+        firebase.firestore.setLogLevel('debug') //firebase debugging purposes
     }
 
     componentWillUnmount(){
