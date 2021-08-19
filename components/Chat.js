@@ -8,6 +8,9 @@ import 'firebase/firestore';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 //app to idenity user offline or online
 import NetInfo from '@react-native-community/netinfo';
+//mapview component
+import MapView from 'react-native-maps';
+import CustomActions from './CustomActions';
 
 const firebaseConfig = {
     apiKey: "AIzaSyCZdwccg52188RwpfQ33os152z0_Cw0Wwg",
@@ -26,17 +29,16 @@ export default class Chat extends React.Component {
             messages : [],
             uid: 0,
             user: '',
-            isConnected: ''
+            isConnected: '',
+            image:  null,
+            location: null
         }
 
         if (!firebase.apps.length){
-            console.log('connect firebase');
             firebase.initializeApp(firebaseConfig);
         }
 
-        //this.referenceChatMessages = null;
-        //create a reference to the active user's documents (messages)
-        this.referenceChatMessages = firebase.firestore().collection('messages');
+        this.referenceChatMessages = null;       
     }
 
     capitalize(str) {
@@ -57,7 +59,8 @@ export default class Chat extends React.Component {
                 console.log('online');
 
                 //listen to authentication events
-                this.authUnsubscribe = firebase.auth().onAuthStateChanged(async (user) => {
+                //this.authUnsubscribe = firebase.auth().onAuthStateChanged(async (user) => {
+                this.authUnsubscribe = firebase.auth().onAuthStateChanged((user) => {
                     if (!user) {
                         //await firebase.auth().signInAnonymously();
                         firebase.auth().signInAnonymously();
@@ -67,13 +70,9 @@ export default class Chat extends React.Component {
                         uid: user.uid,
                         messages: []
                     });
-
-                    if(user.uid != null){
-                        console.log('authenticated');
-                    }
                     
                     //create a reference to the active user's documents (messages)
-                    //this.referenceChatMessages = firebase.firestore().collection('messages');
+                    this.referenceChatMessages = firebase.firestore().collection('messages');
                     // listen for collection changes for current user
                     this.unsubscribe = this.referenceChatMessages.orderBy("createdAt", "desc").onSnapshot(this.onCollectionUpdate);
                 });
@@ -83,14 +82,17 @@ export default class Chat extends React.Component {
                 this.getMessages();
             }
         });
-        firebase.firestore.setLogLevel('debug') //firebase debugging purposes
+        //firebase.firestore.setLogLevel('debug') //firebase debugging purposes
     }
 
     componentWillUnmount(){
-        //stop listening to authentication
-        this.authUnsubscribe();    
-        //stop listenting for changes
-        this.unsubscribe();
+        if (this.state.isConnected == false) {
+        } else {
+            //stop listening to authentication
+            this.authUnsubscribe();    
+            //stop listenting for changes
+            this.unsubscribe();
+        }        
     }
 
     async getMessages(){
@@ -129,9 +131,11 @@ export default class Chat extends React.Component {
         // data from Gifted Chat
         this.referenceChatMessages.add({
             _id: msg._id,
-            text: msg.text,
+            text: msg.text || null,
             createdAt: msg.createdAt,
-            user: msg.user
+            user: msg.user,
+            image: msg.image || null,
+            location: msg.location || null
         });
     }
 
@@ -156,7 +160,9 @@ export default class Chat extends React.Component {
             _id: data._id,
             text: data.text,
             createdAt: data.createdAt.toDate(),
-            user: data.user
+            user: data.user,
+            image: data.image || null,
+            location: data.location || null
           });
         });
 
@@ -197,6 +203,32 @@ export default class Chat extends React.Component {
             }}
             />
         )
+    }   
+
+    renderCustomActions = (props) => {
+        return <CustomActions {...props} />
+    }
+
+    renderCustomView(props){
+        const { currentMessage } = props;
+        if(currentMessage.location){
+            return(
+                <MapView
+                style={{
+                    width: 150,
+                    height: 100,
+                    borderRadius: 13,
+                    margin: 3}}
+                region={{
+                    latitude: currentMessage.location.latitude,
+                    longitude: currentMessage.location.longitude,
+                    latitudeDelta: 0.0922,
+                    longitudeDelta: 0.0421,
+                }}
+              />
+            );
+        }
+        return null;
     }
 
     render(){
@@ -205,6 +237,8 @@ export default class Chat extends React.Component {
         return (
             <View style={[style.container, {backgroundColor: backgroundColor}]} >
                 <GiftedChat
+                    renderActions={this.renderCustomActions}
+                    renderCustomView={this.renderCustomView}
                     renderInputToolbar={this.renderInputToolbar.bind(this)}
                     renderBubble={this.renderBubble.bind(this)}
                     messages={this.state.messages}
